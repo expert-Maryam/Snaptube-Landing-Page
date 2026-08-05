@@ -1,0 +1,15 @@
+{
+  "name": "SnapTube Landing Page",
+  "deployment": "Vercel static site",
+  "framework": "None",
+  "stack": [
+    "HTML5",
+    "CSS3",
+    "Vanilla JavaScript"
+  ],
+  "entry_file": "index.html",
+  "build_command": null,
+  "output_directory": null,
+  "source_file": "snaptube-landing-page(2).html",
+  "inline_scripts_preserved_as_separate_files": 4
+}
