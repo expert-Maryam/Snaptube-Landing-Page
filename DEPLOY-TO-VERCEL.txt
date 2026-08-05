@@ -1,0 +1,37 @@
+SNAPTUBE — GITHUB + VERCEL DEPLOY CHECKLIST
+
+IMPORTANT:
+index.html MUST be at the ROOT of your GitHub repository.
+
+Correct GitHub repository root:
+  index.html
+  vercel.json
+  css/
+  js/
+  assets/
+  README.md
+
+WRONG:
+  my-repository/
+    Snaptube_GitHub_Vercel_Root_Ready/
+      index.html
+
+If your repository has the WRONG structure, either:
+1. Move the contents of the inner folder to the repository root, OR
+2. In Vercel: Settings > Build and Deployment > Root Directory
+   choose the folder that directly contains index.html.
+
+Vercel settings for this project:
+  Framework Preset: Other
+  Root Directory: ./   (only if index.html is in repo root)
+  Build Command: leave blank
+  Output Directory: leave blank
+  Install Command: leave blank
+
+After changing settings:
+  Deployments > latest deployment > Redeploy
+
+If you still see NOT_FOUND:
+  - Confirm the latest deployment is the URL you are opening.
+  - Confirm index.html is lowercase.
+  - Check Deployment > Source and verify index.html is included.
