@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SnapTube — Download Videos and Music for Offline Playback</title>
+<meta name="description" content="Explore SnapTube features, choose video or MP3 quality, simulate downloads, and manage media for convenient offline playback.">
+
+<!-- ============================================================
+     ASSUMPTION: built this as a video/music downloader app landing
+     page (the well-known "Snaptube" product). If your Snaptube is
+     something else, tell me and I'll re-write the copy — the layout
+     underneath will still hold.
+
+     PLACEHOLDERS TO REPLACE BEFORE LAUNCH (search for these):
+     {{DOWNLOAD_URL}}  — where the download/CTA buttons should point
+     ============================================================ -->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet"></noscript>
+
+
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="is-loading">
+
+<div class="site-preloader" id="sitePreloader" role="status" aria-live="polite" aria-label="Loading SnapTube experience">
+  <div class="preloader-core">
+    <svg class="preloader-logo" viewBox="0 0 54 54" aria-hidden="true">
+      <rect x="2" y="2" width="50" height="50" rx="15" fill="#FFC93C"/>
+      <path d="M18 16h18l-9 18z" fill="#241F14"/>
+      <path d="M17 40h20" stroke="#241F14" stroke-width="4" stroke-linecap="round"/>
+    </svg>
+    <svg class="preloader-ring" viewBox="0 0 120 120" aria-hidden="true">
+      <circle cx="60" cy="60" r="52" class="ring-bg"/>
+      <circle cx="60" cy="60" r="52" class="ring-progress" id="preloaderRing"/>
+    </svg>
+    <strong id="preloaderPercent">0%</strong>
+  </div>
+  <p>Preparing the experience</p>
+</div>
+
+<canvas class="cinema-field" id="cinemaField" aria-hidden="true"></canvas>
+
+<svg class="fx-defs" aria-hidden="true" focusable="false">
+  <defs>
+    <filter id="liquidGlassDistort" x="-30%" y="-30%" width="160%" height="160%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.008 0.014" numOctaves="2" seed="12" result="noise">
+        <animate attributeName="baseFrequency" dur="12s" values="0.008 0.014;0.013 0.009;0.008 0.014" repeatCount="indefinite"/>
+      </feTurbulence>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="13" xChannelSelector="R" yChannelSelector="B"/>
+    </filter>
+    <linearGradient id="glassRibbonGradient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFC93C" stop-opacity="0"/>
+      <stop offset=".45" stop-color="#FFC93C"/>
+      <stop offset=".72" stop-color="#E63946"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+</svg>
+<div class="liquid-glass-ambient" aria-hidden="true">
+  <span class="ambient-glass-blob a"></span>
+  <span class="ambient-glass-blob b"></span>
+  <span class="ambient-glass-blob c"></span>
+</div>
+<div class="glass-lens" aria-hidden="true"></div>
+
+<div class="temporal-band" aria-hidden="true"></div>
+<div class="temporal-noise" aria-hidden="true"></div>
+
+<div class="cursor-glow" aria-hidden="true"><span>View</span></div>
+<div class="cursor-dot" aria-hidden="true"></div>
+
+<nav class="sticky-nav" aria-label="Quick navigation">
+  <a href="#top" class="sticky-nav-brand">
+    <svg class="logo-mark" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect x="1" y="1" width="38" height="38" rx="11" fill="#FFC93C"/>
+      <path d="M14 13h12l-6 12.5z" fill="#241F14"/>
+      <path d="M13 30h14" stroke="#241F14" stroke-width="3.2" stroke-linecap="round"/>
+    </svg>
+    SnapTube
+  </a>
+  <ul class="sticky-nav-links">
+    <li><a href="#how" data-nav="how">How it works</a></li>
+    <li><a href="#glass" data-nav="glass">Offline flow</a></li>
+    <li><a href="#why" data-nav="why">Why it's different</a></li>
+    <li><a href="#faq" data-nav="faq">FAQ</a></li>
+  </ul>
+  <a href="{{DOWNLOAD_URL}}" class="btn">Download</a>
+</nav>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <nav class="nav-row" aria-label="Primary">
+      <ul class="nav-links">
+        <li><a href="#how">How it works</a></li>
+        <li><a href="#glass">Offline flow</a></li>
+        <li><a href="#why">Why it's different</a></li>
+        <li><a href="#faq">FAQ</a></li>
+        <li><a href="{{DOWNLOAD_URL}}">Download</a></li>
+      </ul>
+      <a href="{{DOWNLOAD_URL}}" class="btn btn-sm">Get SnapTube — free</a>
+    </nav>
+    <div class="brand-block">
+      <div class="brand-row">
+        <svg class="logo-mark" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect x="1" y="1" width="38" height="38" rx="11" fill="#241F14"/>
+          <path d="M14 13h12l-6 12.5z" fill="#FFC93C"/>
+          <path d="M13 30h14" stroke="#FFC93C" stroke-width="3.2" stroke-linecap="round"/>
+                  </svg>
+        <span class="brand-name">SnapTube</span>
+        <svg class="spark" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
+      </div>
+      <p class="brand-tagline">Download and enjoy videos your way</p>
+    </div>
+  </div>
+  <svg class="wave" style="color:var(--ink)" viewBox="0 0 1440 70" preserveAspectRatio="none"><path d="M0,20 C360,70 1080,0 1440,30 L1440,70 L0,70 Z"/></svg>
+</header>
+
+<main>
+
+  <section class="hero-dark" id="top">
+    <div class="hero-blob" aria-hidden="true"></div>
+    <div class="wrap hero-dark-grid">
+      <div class="hero-dark-copy">
+        <span class="trust-badge">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.6 7.1.7-5.4 4.7 1.6 7-6.2-3.7L6 21l1.6-7-5.4-4.7 7.1-.7z"/></svg>
+          Verified &amp; safe download
+        </span>
+        <h1 data-split="hero">Bad internet shouldn't mean <span class="hl">no video.</span></h1>
+        <p class="hero-dark-sub">SnapTube saves the videos and music you actually want to keep, so you're not stuck staring at a spinning wheel every time you want to watch something. Download it once, on your terms — then it's yours, connection or not.</p>
+        <div class="hero-dark-cta">
+          <a href="{{DOWNLOAD_URL}}" class="btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12M6 12l6 6 6-6M4 20h16"/></svg>
+            Download SnapTube — free
+          </a>
+          <a href="#how" class="btn btn-outline-dark">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20M4 19.5A2.5 2.5 0 006.5 22H20V4H6.5A2.5 2.5 0 004 6.5v13z"/></svg>
+            How it works
+          </a>
+        </div>
+        <div class="trust-row">
+          <div class="trust-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11z"/></svg>
+            <div><strong>Verified file</strong><span>Scanned for safety</span></div>
+          </div>
+          <div class="trust-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z"/></svg>
+            <div><strong>Fast downloads</strong><span>No unnecessary steps</span></div>
+          </div>
+          <div class="trust-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg>
+            <div><strong>No clutter</strong><span>Clean, simple interface</span></div>
+          </div>
+          <div class="trust-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="10" width="18" height="11" rx="2"/><path d="M7 10V7a5 5 0 0110 0v3"/></svg>
+            <div><strong>Free to start</strong><span>No hidden cost</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-dark-visual">
+        <div class="dimension-portal" aria-hidden="true">
+          <span class="depth-grid-3d"></span>
+          <span class="depth-ring ring-a"></span>
+          <span class="depth-ring ring-b"></span>
+          <span class="depth-ring ring-c"></span>
+          <span class="depth-shard shard-a"></span>
+          <span class="depth-shard shard-b"></span>
+          <span class="depth-shard shard-c"></span>
+        </div>
+        <span class="time-echo echo-1" aria-hidden="true"></span>
+        <span class="time-echo echo-2" aria-hidden="true"></span>
+        <span class="time-echo echo-3" aria-hidden="true"></span>
+
+        <svg class="hero-line-art svg-draw" viewBox="0 0 520 620" aria-hidden="true">
+          <path class="draw-path" d="M36 465 C88 288 124 112 268 80 C410 48 492 166 458 304 C430 418 336 522 178 548"/>
+          <path class="draw-path draw-path-2" d="M92 132 C150 198 204 222 274 210 C358 194 394 132 454 100"/>
+          <circle class="draw-dot" cx="36" cy="465" r="7"/>
+          <circle class="draw-dot" cx="458" cy="304" r="7"/>
+        </svg>
+
+        <div class="floating-platform fp-youtube" data-float-depth="1.15" aria-hidden="true">
+          <span class="floating-platform-icon youtube"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>
+          <small>YouTube</small>
+        </div>
+        <div class="floating-platform fp-tiktok" data-float-depth=".8" aria-hidden="true">
+          <span class="floating-platform-icon tiktok">♪</span><small>TikTok</small>
+        </div>
+        <div class="floating-platform fp-instagram" data-float-depth="1.35" aria-hidden="true">
+          <span class="floating-platform-icon instagram">◎</span><small>Instagram</small>
+        </div>
+        <div class="floating-platform fp-facebook" data-float-depth=".65" aria-hidden="true">
+          <span class="floating-platform-icon facebook">f</span><small>Facebook</small>
+        </div>
+
+        <div class="phone2-frame">
+          <div class="phone2-screen">
+            <p class="phone2-title">SnapTube</p>
+            <div class="phone2-search">Search or enter url</div>
+            <div class="platform-grid">
+              <div class="platform-item"><span class="platform-dot" style="background:#E63946;"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>YouTube</div>
+              <div class="platform-item"><span class="platform-dot" style="background:#241F14;"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>TikTok</div>
+              <div class="platform-item"><span class="platform-dot" style="background:#C2419C;"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>Instagram</div>
+              <div class="platform-item"><span class="platform-dot" style="background:#3B5FE2;"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>Facebook</div>
+              <div class="platform-item"><span class="platform-dot" style="background:#2FA7DE;"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>Twitter/X</div>
+              <div class="platform-item"><span class="platform-dot" style="background:#FFC93C;"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>Snapchat</div>
+              <div class="platform-item"><span class="platform-dot" style="background:#2456C7;"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>Dailymotion</div>
+              <div class="platform-item"><span class="platform-dot" style="background:#A69C86;"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></span>More</div>
+            </div>
+            <p class="format-label">Download as</p>
+            <div class="format-row"><span><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>Music</span><span class="fmt-meta">128k MP3</span></div>
+            <div class="format-row"><span><svg viewBox="0 0 24 24" fill="currentColor"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>Video</span><span class="fmt-meta">360p</span></div>
+            <div class="format-row"><span><svg viewBox="0 0 24 24" fill="currentColor"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>HD Video</span><span class="fmt-meta">720p / 1080p</span></div>
+
+            <div class="resolution-picker">
+              <button class="resolution-toggle" type="button" aria-expanded="false" aria-controls="resolutionMenu">
+                <span>Resolution</span>
+                <strong class="resolution-value">1080p</strong>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg>
+              </button>
+              <div class="resolution-menu" id="resolutionMenu" role="listbox" aria-label="Video resolution">
+                <button type="button" role="option" data-resolution="360p"><span>360p</span><small>Data saver</small></button>
+                <button type="button" role="option" data-resolution="720p"><span>720p</span><small>HD</small></button>
+                <button type="button" role="option" aria-selected="true" data-resolution="1080p"><span>1080p</span><small>Full HD</small></button>
+              </div>
+            </div>
+
+            <div class="download-simulation" aria-live="polite">
+              <div class="download-sim-top"><span>Travel vlog.mp4</span><strong id="downloadPercent">0%</strong></div>
+              <div class="download-sim-track"><i id="downloadProgressBar"></i></div>
+              <small id="downloadState">Preparing download…</small>
+            </div>
+          </div>
+        </div>
+        <svg class="phone2-badge" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect x="1" y="1" width="38" height="38" rx="11" fill="#241F14"/>
+          <path d="M14 13h12l-6 12.5z" fill="#FFC93C"/>
+          <path d="M13 30h14" stroke="#FFC93C" stroke-width="3.2" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="wrap">
+      <div class="hero-stats-bar">
+        <div class="stat-chip">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 6 6.5 1-4.7 4.6L18 20l-6-3.3L6 20l1.2-6.4L2.5 9l6.5-1z"/></svg>
+          <div><strong>Latest version</strong><span>v7.63.0.76330710</span></div>
+        </div>
+        <div class="stat-chip">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+          <div><strong>File size</strong><span>30.9 MB</span></div>
+        </div>
+        <div class="stat-chip">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="12" height="18" rx="2"/><path d="M10 20h4"/></svg>
+          <div><strong>Android required</strong><span>Android 5.0+</span></div>
+        </div>
+        <div class="stat-chip">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+          <div><strong>File type</strong><span>APK</span></div>
+        </div>
+      </div>
+    </div>
+
+    <svg class="wave" style="color:var(--yellow-pale)" viewBox="0 0 1440 70" preserveAspectRatio="none"><path d="M0,30 C400,0 1040,70 1440,20 L1440,70 L0,70 Z"/></svg>
+  </section>
+
+  <div class="marquee" aria-hidden="true">
+    <div class="marquee-track">
+      <span>YouTube</span><span>TikTok</span><span>Instagram</span><span>Facebook</span><span>Twitter/X</span><span>Snapchat</span><span>WhatsApp Status</span><span>Pinterest</span><span>Kwai</span><span>Threads</span><span>Dailymotion</span><span>SoundCloud</span>
+      <span>YouTube</span><span>TikTok</span><span>Instagram</span><span>Facebook</span><span>Twitter/X</span><span>Snapchat</span><span>WhatsApp Status</span><span>Pinterest</span><span>Kwai</span><span>Threads</span><span>Dailymotion</span><span>SoundCloud</span>
+    </div>
+  </div>
+
+
+
+  <section class="glass-experience" id="glass" aria-labelledby="glassTitle">
+    <div class="glass-pin">
+      <div class="wrap glass-stage">
+        <div class="glass-copy">
+          <p class="eyebrow-line">Your offline media flow</p>
+          <h2 id="glassTitle" data-split-scroll>Save it now. Enjoy it anywhere.</h2>
+          <p>Paste a supported media link, choose video or audio, select the quality that suits your storage and let SnapTube finish the download in the background. Your saved files stay ready for offline playback when the signal drops.</p>
+          <div class="glass-index" aria-hidden="true"><span>Choose · Download · Play</span><i></i><b>01—03</b></div>
+        </div>
+        <div class="glass-world" aria-label="Interactive liquid-glass 3D scene">
+          <div class="glass-portal-shell" aria-hidden="true"></div>
+          <div class="glass-liquid-orb" aria-hidden="true"></div>
+          <article class="glass-card-3d one liquid-glass-surface">
+            <span>Format control</span>
+            <strong>Keep the video or save only the audio</strong>
+            <p>Choose a video file for watching or switch to MP3 when you only need the soundtrack.</p>
+          </article>
+          <article class="glass-card-3d two liquid-glass-surface">
+            <span>Quality control</span>
+            <strong>Pick the resolution that fits your day</strong>
+            <p>Use a lighter quality to save mobile data and storage, or select HD when detail matters.</p>
+          </article>
+          <article class="glass-card-3d three liquid-glass-surface">
+            <span>Offline library</span>
+            <strong>Your downloads stay easy to find</strong>
+            <p>Keep saved videos and music together, then play them without reopening a browser or converter.</p>
+          </article>
+          <svg class="glass-ribbon" viewBox="0 0 760 650" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M34 402 C164 110 328 580 476 278 C596 32 664 342 738 158"/>
+            <path d="M18 244 C180 520 300 58 505 410 C612 594 690 420 748 506" opacity=".38"/>
+          </svg>
+          <span class="glass-depth-label">video · audio · offline</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="feature" id="how">
+    <div class="amb-blob" aria-hidden="true"></div>
+    <div class="wrap feature-grid">
+      <div class="feature-copy reveal">
+        <p class="eyebrow-line" style="justify-content:flex-start;">How it works</p>
+        <h2 style="margin-top:10px;">Paste a link. Pick your quality. Download.</h2>
+        <p style="margin-top:16px; color:var(--ink-soft); font-size:15px; max-width:38ch;">That's genuinely the whole process — no extra steps, no waiting around for a converter site to finish loading.</p>
+        <div class="feature-cta">
+          <a href="{{DOWNLOAD_URL}}" class="btn">Get SnapTube — free
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+        </div>
+      </div>
+      <div class="phone-wrap reveal">
+        <span class="ring r1" aria-hidden="true"></span>
+        <span class="ring r2" aria-hidden="true"></span>
+        <span class="ring-orbit-dot dot-a" aria-hidden="true"></span>
+        <span class="ring-orbit-dot dot-b" aria-hidden="true"></span>
+        <span class="ring-orbit-dot dot-c" aria-hidden="true"></span>
+        <span class="ring-pulse pulse-a" aria-hidden="true"></span>
+        <span class="ring-pulse pulse-b" aria-hidden="true"></span>
+        <span class="ring-scan" aria-hidden="true"></span>
+        <svg class="sparkle-decor" style="width:16px;height:16px;color:var(--red);left:8%;top:6%;" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
+        <svg class="sparkle-decor" style="width:12px;height:12px;color:var(--ink);opacity:.4;right:10%;bottom:8%;" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/></svg>
+        <div class="phone">
+          <div class="phone-screen">
+            <p class="phone-head">New downloads</p>
+            <div class="video-card">
+              <span class="video-thumb" style="background:#E63946;"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>
+              <span class="video-meta"><span class="t">Morning mix playlist</span><br><span class="s">128 kbps · 3:42</span></span>
+            </div>
+            <div class="video-card">
+              <span class="video-thumb" style="background:#FFC93C;"><svg viewBox="0 0 24 24" fill="#241F14"><path d="M8 5v14l11-7z"/></svg></span>
+              <span class="video-meta"><span class="t">Travel vlog, Ep. 4</span><br><span class="s">1080p · 12:08</span></span>
+            </div>
+            <div class="video-card">
+              <span class="video-thumb" style="background:#241F14;"><svg viewBox="0 0 24 24" fill="#FFC93C"><path d="M8 5v14l11-7z"/></svg></span>
+              <span class="video-meta"><span class="t">Live session</span><br><span class="s">720p · 45:16</span></span>
+            </div>
+            <div class="dl-pill"><span>Downloading… 68%</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <svg class="wave" style="color:var(--yellow)" viewBox="0 0 1440 70" preserveAspectRatio="none"><path d="M0,40 C400,0 1040,70 1440,10 L1440,70 L0,70 Z"/></svg>
+  </section>
+
+  <section class="services" id="features">
+    <div class="amb-blob" aria-hidden="true"></div>
+    <div class="feature-space" aria-hidden="true">
+      <div class="feature-portal"></div>
+      <span class="feature-orbit-dot dot-1"></span>
+      <span class="feature-orbit-dot dot-2"></span>
+      <span class="feature-orbit-dot dot-3"></span>
+      <span class="feature-time-echo echo-a"></span>
+      <span class="feature-time-echo echo-b"></span>
+      <span class="feature-time-echo echo-c"></span>
+      <div class="feature-particle-field" id="featureParticleField"></div>
+      <i class="feature-velocity-streak" style="--sy:18%;--so:.42;--sr:-4deg"></i>
+      <i class="feature-velocity-streak" style="--sy:38%;--so:.22;--sr:3deg"></i>
+      <i class="feature-velocity-streak" style="--sy:67%;--so:.35;--sr:-2deg"></i>
+      <i class="feature-velocity-streak" style="--sy:84%;--so:.18;--sr:5deg"></i>
+    </div>
+    <svg class="services-bg-logo" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect x="2" y="2" width="36" height="36" rx="10.5" fill="none" stroke="#241F14" stroke-width="1.6"/>
+      <path d="M14 13h12l-6 12.5z" fill="#241F14"/>
+      <path d="M13 30h14" stroke="#241F14" stroke-width="2.6" stroke-linecap="round"/>
+    </svg>
+    <div class="wrap">
+      <div class="stamp-wrap reveal">
+        <span class="stamp"><h2>Our Features</h2></span>
+      </div>
+      <div class="services-grid">
+        <div class="stat-head reveal">
+          <h3>Why people choose SnapTube</h3>
+          <p class="testimonial">SnapTube lets you download videos, convert them to MP3, and manage your files in one place — save, play, and organize everything offline without switching between different apps.</p>
+          <span class="feature-depth-label"><i></i> Interactive feature matrix</span>
+        </div>
+        <div class="services-box reveal">
+          <a class="row" href="{{DOWNLOAD_URL}}"><span>Video Downloads</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>
+          </a>
+          <a class="row" href="{{DOWNLOAD_URL}}"><span>Music Downloads</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>
+          </a>
+          <a class="row" href="{{DOWNLOAD_URL}}"><span>Playlist Support</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>
+          </a>
+          <a class="row active" href="{{DOWNLOAD_URL}}"><span>Offline Viewing</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+    <svg class="wave" style="color:var(--white)" viewBox="0 0 1440 70" preserveAspectRatio="none"><path d="M0,20 C360,70 1080,0 1440,30 L1440,70 L0,70 Z"/></svg>
+  </section>
+
+
+  <section class="horizontal-story" id="experience" aria-labelledby="experienceTitle">
+    <div class="horizontal-pin">
+      <div class="pin-status" aria-hidden="true"><span>Scroll to explore</span><i></i></div>
+      <div class="horizontal-head wrap">
+        <p class="eyebrow-line" style="justify-content:flex-start;color:var(--yellow);">Inside the experience</p>
+        <h2 id="experienceTitle" data-split-scroll>One smooth flow, from link to offline playback.</h2>
+      </div>
+      <div class="horizontal-viewport">
+        <div class="horizontal-track">
+          <article class="scroll-panel panel-link">
+            <span class="panel-no">01</span>
+            <div><p class="panel-kicker">Paste</p><h3>Drop in a link</h3><p>Copy a video link and paste it directly into the clean search field.</p></div>
+            <div class="panel-ui url-ui"><span>https://video.example/watch</span><i></i></div>
+          </article>
+          <article class="scroll-panel panel-detect">
+            <span class="panel-no">02</span>
+            <div><p class="panel-kicker">Detect</p><h3>Formats appear instantly</h3><p>The interface reveals available audio and video choices without leaving the app.</p></div>
+            <div class="format-stack"><span>MP3 · 128 kbps</span><span>MP4 · 720p</span><span>MP4 · 1080p</span></div>
+          </article>
+          <article class="scroll-panel panel-quality">
+            <span class="panel-no">03</span>
+            <div><p class="panel-kicker">Choose</p><h3>Select your resolution</h3><p>Pick a smaller file or Full HD through a smooth dropdown reveal.</p></div>
+            <div class="quality-orbit"><strong>1080p</strong><span>Full HD</span></div>
+          </article>
+          <article class="scroll-panel panel-progress">
+            <span class="panel-no">04</span>
+            <div><p class="panel-kicker">Download</p><h3>Watch progress live</h3><p>A clear progress simulation shows speed, percentage, and completion state.</p></div>
+            <div class="panel-progress-ui"><span><b>Downloading</b><em>82%</em></span><i><b></b></i></div>
+          </article>
+          <article class="scroll-panel panel-offline">
+            <span class="panel-no">05</span>
+            <div><p class="panel-kicker">Enjoy</p><h3>Play it offline</h3><p>Your saved video stays ready when the connection disappears.</p></div>
+            <svg class="offline-drawing svg-draw" viewBox="0 0 260 170" aria-hidden="true">
+              <rect x="46" y="18" width="168" height="134" rx="22" class="draw-path"/>
+              <path d="M112 65l54 29-54 29z" class="draw-path draw-path-2"/>
+              <path d="M80 142h100" class="draw-path draw-path-3"/>
+            </svg>
+          </article>
+        </div>
+      </div>
+      <div class="horizontal-meter" aria-hidden="true"><i id="horizontalMeter"></i></div>
+    </div>
+  </section>
+
+  <section class="why-section" id="why">
+    <div class="wrap">
+      <div class="why-head reveal">
+        <p class="eyebrow-line">Why it works</p>
+        <h2 data-split-scroll>Everything the app actually does for you.</h2>
+      </div>
+      <div class="why-grid">
+        <div class="why-card yellow">
+          <h3>HD quality, your choice</h3>
+          <p>Pick anything from 144p up to 1080p Full HD, depending on what the original video offers and how much space you want to use.</p>
+        </div>
+        <div class="why-card dark">
+          <h3>Convert to MP3 in one tap</h3>
+          <p>Just want the audio? Skip the full video file and save it straight to MP3 instead — less storage, same song.</p>
+        </div>
+        <div class="why-card amber">
+          <h3>Downloads keep running in the background</h3>
+          <p>Start a save and keep browsing, chatting, or using other apps — it finishes on its own.</p>
+        </div>
+
+        <div class="why-card art" aria-hidden="true">
+          <svg viewBox="0 0 400 320" xmlns="http://www.w3.org/2000/svg">
+            <rect width="400" height="320" fill="#241F14"/>
+            <circle cx="200" cy="160" r="110" fill="#FFC93C" opacity="0.08"/>
+            <rect x="160" y="80" width="80" height="160" rx="16" fill="#3A2F1C"/>
+            <rect x="168" y="94" width="64" height="120" rx="4" fill="#FFFDF6"/>
+            <circle cx="200" cy="222" r="7" fill="#FFFDF6"/>
+            <circle cx="200" cy="150" r="26" fill="#E63946"/>
+            <path d="M190 150l8 8 14-16" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <path d="M180 190h40M186 200h28" stroke="#FFC93C" stroke-width="4" stroke-linecap="round"/>
+            <circle cx="90" cy="70" r="4" fill="#FFC93C" opacity="0.5"/>
+            <circle cx="320" cy="230" r="5" fill="#E63946" opacity="0.4"/>
+            <circle cx="312" cy="58" r="3" fill="#FFFDF6" opacity="0.4"/>
+          </svg>
+        </div>
+        <div class="why-card red">
+          <h3>Save a whole playlist at once</h3>
+          <p>Queue up several videos or tracks instead of downloading them one at a time.</p>
+        </div>
+        <div class="why-card pale">
+          <h3>Play everything without leaving the app</h3>
+          <p>A built-in player and floating window mean you don't need a separate app to watch or listen back.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="faq-section" id="faq">
+    <div class="wrap">
+      <div class="faq-head reveal">
+        <p class="eyebrow-line">Before you install</p>
+        <h2>Questions people usually ask</h2>
+      </div>
+      <div class="faq-list reveal-stagger">
+        <div class="faq-item">
+          <button class="faq-summary" aria-expanded="false">Is SnapTube legal to use?<svg class="faq-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+          <div class="faq-answer-wrap"><div class="faq-answer-inner">
+            <p>Yes, installing SnapTube is legal in many regions. That said, always follow the rules of the platform you're downloading from — only save videos or music you have permission to download.</p>
+          </div></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-summary" aria-expanded="false">Why isn't SnapTube on Google Play?<svg class="faq-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+          <div class="faq-answer-wrap"><div class="faq-answer-inner">
+            <p>Google Play doesn't allow apps that download videos from some websites, so SnapTube isn't listed there. You can still install it directly from the official APK file.</p>
+          </div></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-summary" aria-expanded="false">Do I need internet to play what I've downloaded?<svg class="faq-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+          <div class="faq-answer-wrap"><div class="faq-answer-inner">
+            <p>No. Once a video or music file is downloaded, you can watch or listen to it anytime — no connection required.</p>
+          </div></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-summary" aria-expanded="false">Can I download in 4K or Full HD?<svg class="faq-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+          <div class="faq-answer-wrap"><div class="faq-answer-inner">
+            <p>Yes, when the original video is available in that quality. You can choose HD, Full HD, or 4K before you start the download.</p>
+          </div></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-summary" aria-expanded="false">Does it work on Android tablets?<svg class="faq-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+          <div class="faq-answer-wrap"><div class="faq-answer-inner">
+            <p>Yes — SnapTube works on most Android phones and tablets. Just check that your device meets the Android version requirement before installing.</p>
+          </div></div>
+        </div>
+      </div>
+    </div>
+    <svg class="wave" style="color:var(--yellow)" viewBox="0 0 1440 70" preserveAspectRatio="none"><path d="M0,30 C400,0 1040,70 1440,20 L1440,70 L0,70 Z"/></svg>
+  </section>
+
+  <section class="teaser teaser-4d" id="offline-future">
+    <div class="amb-blob" aria-hidden="true"></div>
+    <div class="teaser-4d-world" aria-hidden="true">
+      <span class="teaser-time-grid"></span>
+      <span class="teaser-time-ring ring-a"></span>
+      <span class="teaser-time-ring ring-b"></span>
+      <span class="teaser-time-ring ring-c"></span>
+      <span class="teaser-light-ribbon"></span>
+      <span class="teaser-time-slice slice-a"></span>
+      <span class="teaser-time-slice slice-b"></span>
+      <span class="teaser-time-slice slice-c"></span>
+      <span class="teaser-time-slice slice-d"></span>
+    </div>
+    <div class="wrap teaser-grid">
+      <div class="teaser-art reveal">
+        <svg viewBox="0 0 320 320" xmlns="http://www.w3.org/2000/svg">
+          <rect width="320" height="320" fill="#241F14"/>
+          <circle cx="160" cy="160" r="90" fill="#FFC93C" opacity="0.15"/>
+          <circle cx="160" cy="160" r="60" fill="#FFC93C"/>
+          <path d="M148 132l40 28-40 28z" fill="#241F14"/>
+          <path d="M60 250c20-10 40-10 60 0M200 250c20-10 40-10 60 0" stroke="#E63946" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="teaser-copy reveal">
+        <h2>Next time your video buffers, you won't have to be there for it.</h2>
+        <p>Save what you actually want to watch. Download it once with SnapTube, and stop depending on a connection that keeps letting you down.</p>
+        <div class="teaser-cta">
+          <a href="{{DOWNLOAD_URL}}" class="btn">Get SnapTube — free
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12M6 12l6 6 6-6"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="premium-footer" id="siteFooter">
+  <span class="footer-ambient a" aria-hidden="true"></span>
+  <span class="footer-ambient b" aria-hidden="true"></span>
+
+  <div class="wrap premium-footer-inner">
+    <section class="footer-reveal" aria-labelledby="footerTitle">
+      <p class="footer-eyebrow">The internet, without the waiting</p>
+      <div class="footer-hero-grid">
+        <div class="footer-hero-copy">
+          <h2 id="footerTitle">Take the internet <em>offline.</em></h2>
+          <p>Keep the videos and music that matter to you. Save once, watch anywhere, and stop letting a weak connection decide what you can enjoy.</p>
+        </div>
+
+        <div class="footer-download-card liquid-glass-surface" id="footerDownloadCard">
+          <div class="footer-card-head">
+            <div class="footer-app-mark">
+              <svg class="logo-mark" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <rect x="1" y="1" width="38" height="38" rx="11" fill="#FFC93C"/>
+                <path d="M14 13h12l-6 12.5z" fill="#241F14"/>
+                <path d="M13 30h14" stroke="#241F14" stroke-width="3.2" stroke-linecap="round"/>
+              </svg>
+              <div><strong>SnapTube</strong><span>Android application</span></div>
+            </div>
+            <span class="footer-live-pill"><i aria-hidden="true"></i> Ready to install</span>
+          </div>
+          <p class="footer-card-title">Your offline library starts here.</p>
+          <p class="footer-card-copy">Choose your quality, download in the background, and play everything from one clean app.</p>
+          <div class="footer-card-actions">
+            <a href="{{DOWNLOAD_URL}}" class="btn">
+              Download free
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12M6 12l6 6 6-6M4 20h16"/></svg>
+            </a>
+            <div class="footer-card-meta"><span>30.9 MB</span><span>Android 5.0+</span><span>APK</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="footer-divider footer-reveal" aria-hidden="true"><span></span></div>
+
+    <section class="footer-main-grid footer-reveal">
+      <div class="footer-brand-panel">
+        <a class="footer-brand-lockup" href="#top" aria-label="SnapTube home">
+          <svg class="logo-mark" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect x="1" y="1" width="38" height="38" rx="11" fill="#FFC93C"/>
+            <path d="M14 13h12l-6 12.5z" fill="#241F14"/>
+            <path d="M13 30h14" stroke="#241F14" stroke-width="3.2" stroke-linecap="round"/>
+          </svg>
+          <strong>SnapTube</strong>
+        </a>
+        <p>A faster way to save, organize, and enjoy the media you already love—without buffering, clutter, or unnecessary steps.</p>
+        <div class="footer-trust-line" aria-label="Product highlights">
+          <span>Verified file</span><span>Fast download</span><span>Offline playback</span>
+        </div>
+        <div class="footer-socials" aria-label="Social links">
+          <a class="footer-social" href="#" aria-label="YouTube">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.6 7.2a2.8 2.8 0 00-2-2C17.8 4.7 12 4.7 12 4.7s-5.8 0-7.6.5a2.8 2.8 0 00-2 2A29 29 0 002 12a29 29 0 00.4 4.8 2.8 2.8 0 002 2c1.8.5 7.6.5 7.6.5s5.8 0 7.6-.5a2.8 2.8 0 002-2A29 29 0 0022 12a29 29 0 00-.4-4.8zM10 15.2V8.8l5.5 3.2z"/></svg>
+          </a>
+          <a class="footer-social" href="#" aria-label="Instagram">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+          </a>
+          <a class="footer-social" href="#" aria-label="Facebook">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M14 8h3V4.3c-.5-.1-2-.3-3.4-.3C10.7 4 8.7 5.8 8.7 9v3H5.5v4.1h3.2V24h4V16.1H16l.5-4.1h-3.8V9.4c0-1.2.3-1.4 1.3-1.4z"/></svg>
+          </a>
+          <a class="footer-social" href="#" aria-label="X">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.9 3H22l-6.8 7.8L23 21h-6.1l-4.8-6.3L6.6 21H3.5l7.1-8.1L3.1 3h6.3l4.3 5.7L18.9 3zm-1.1 16h1.7L8.5 4.9H6.7L17.8 19z"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <nav class="footer-nav-grid" aria-label="Footer navigation">
+        <div class="footer-nav-group">
+          <h3>Product</h3>
+          <a href="#how">How it works</a>
+          <a href="#features">Features</a>
+          <a href="#why">Why SnapTube</a>
+          <a href="{{DOWNLOAD_URL}}">Download APK</a>
+        </div>
+        <div class="footer-nav-group">
+          <h3>Explore</h3>
+          <a href="#experience">3D experience</a>
+          <a href="#glass">Liquid glass</a>
+          <a href="#faq">Common questions</a>
+          <a href="#top">Back to start</a>
+        </div>
+        <div class="footer-nav-group">
+          <h3>Company</h3>
+          <a href="/about">About</a>
+          <a href="/contact">Contact</a>
+          <a href="/privacy">Privacy</a>
+          <a href="/terms">Terms</a>
+        </div>
+      </nav>
+    </section>
+
+    <div class="footer-wordmark footer-reveal" aria-hidden="true">
+      <div class="footer-wordmark-track">
+        <span>SNAPTUBE</span><span>SNAPTUBE</span>
+      </div>
+    </div>
+
+    <div class="footer-marquee" aria-hidden="true">
+      <div class="footer-marquee-track">
+        <span>Download</span><span>Save</span><span>Play</span><span>Offline</span><span>HD video</span><span>MP3 audio</span><span>Background mode</span><span>One clean app</span>
+        <span>Download</span><span>Save</span><span>Play</span><span>Offline</span><span>HD video</span><span>MP3 audio</span><span>Background mode</span><span>One clean app</span>
+      </div>
+    </div>
+
+    <div class="footer-bottom-premium footer-reveal">
+      <span class="footer-year">© <span id="footerYear">2026</span> SnapTube</span>
+      <span class="footer-legal-note">SnapTube is not available on Google Play. Install only from a source you trust, and download only content you have permission or legal rights to save.</span>
+      <button class="footer-top-btn" id="footerTopBtn" type="button" aria-label="Back to top">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg>
+      </button>
+    </div>
+  </div>
+</footer>
+
+
+
+
+
+
+
+
+
+
+
+
+  <script src="js/app.js"></script>
+</body>
+</html>
