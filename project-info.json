@@ -1,0 +1,11 @@
+{
+  "name": "Snaptube Landing Page",
+  "type": "Frontend web project",
+  "stack": [
+    "HTML5",
+    "CSS3",
+    "Vanilla JavaScript"
+  ],
+  "entry_file": "index.html",
+  "source_file": "snaptube-landing-page.html"
+}
