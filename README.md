@@ -12,7 +12,6 @@ This folder contains the complete source code for the uploaded Snaptube landing 
 
 ## How to run
 
-1. Extract the ZIP file.
 2. Open the `Snaptube_Landing_Page_Project` folder.
 3. Double-click `index.html`.
 4. Open it in Chrome, Edge, Firefox, or another modern browser.
